@@ -8,6 +8,7 @@ import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import healthRoutes from "./routes/health";
 import projectRoutes from "./routes/projects";
 import providerRoutes from "./routes/providers";
+import chatRoutes from "./routes/chat";
 
 const app = new Hono<AppContext>();
 
@@ -29,6 +30,7 @@ app.get("/", (c) =>
 app.route("/", healthRoutes);
 app.route("/", projectRoutes);
 app.route("/", providerRoutes);
+app.route("/", chatRoutes);
 
 app.notFound(notFoundHandler);
 app.onError(errorHandler);
