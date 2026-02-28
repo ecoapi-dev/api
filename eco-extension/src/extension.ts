@@ -16,6 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const scanCommand = vscode.commands.registerCommand("eco.scanWorkspace", () => {
     vscode.commands.executeCommand("eco.sidebarView.focus");
+    provider.startScan();
   });
 
   context.subscriptions.push(openPanelCommand, scanCommand);

@@ -28,7 +28,8 @@
         {
           "type": "webview",
           "id": "eco.sidebarView",
-          "name": "ECO API Analyzer"
+          "name": "ECO",
+          "icon": "media/eco-icon.svg"
         }
       ]
     },
@@ -39,9 +40,19 @@
       },
       {
         "command": "eco.scanWorkspace",
-        "title": "ECO: Scan Workspace"
+        "title": "ECO: Scan Workspace",
+        "icon": "$(search)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "eco.scanWorkspace",
+          "when": "view == eco.sidebarView",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "title": "ECO API Analyzer",
       "properties": {

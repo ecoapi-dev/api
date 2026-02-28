@@ -47,6 +47,10 @@ export class EcoSidebarProvider implements vscode.WebviewViewProvider {
     );
   }
 
+  public startScan() {
+    this._view?.webview.postMessage({ type: "triggerScan" } as HostMessage);
+  }
+
   private postMessage(message: HostMessage) {
     this._view?.webview.postMessage(message);
   }

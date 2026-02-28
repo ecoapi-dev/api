@@ -3,7 +3,7 @@ import { LandingPage } from "./components/LandingPage";
 import { ScanningPage } from "./components/ScanningPage";
 import { ResultsPage } from "./components/ResultsPage";
 import { postMessage } from "./vscode";
-import type { Suggestion, ScanSummary, HostMessage } from "./types";
+import type { Suggestion, ScanSummary, EndpointRecord, HostMessage } from "./types";
 
 type Screen = "landing" | "scanning" | "results";
 
@@ -17,6 +17,7 @@ export default function App() {
   const [endpointCount, setEndpointCount] = useState(0);
 
   // Results state
+  const [endpoints, setEndpoints] = useState<EndpointRecord[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [summary, setSummary] = useState<ScanSummary>({
     totalEndpoints: 0,
@@ -56,19 +57,21 @@ export default function App() {
           setEndpointCount(msg.endpointsSoFar);
           break;
 
+        case "triggerScan":
+          handleStartScan();
+          break;
+
         case "scanComplete":
-          // Brief pause before showing results for visual transition
           break;
 
         case "scanResults":
+          setEndpoints(msg.endpoints);
           setSuggestions(msg.suggestions);
           setSummary(msg.summary);
-          // Small delay for smooth transition
-          setTimeout(() => setScreen("results"), 500);
+          setTimeout(() => setScreen("results"), 300);
           break;
 
         case "error":
-          // On error during scan, go back to landing
           if (screen === "scanning") {
             setScreen("landing");
           }
@@ -81,13 +84,7 @@ export default function App() {
   }, [screen]);
 
   return (
-    <div
-      className="w-full h-full flex flex-col overflow-hidden"
-      style={{
-        backgroundColor: "#0B0F0B",
-        fontFamily: "'JetBrains Mono', monospace",
-      }}
-    >
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {screen === "landing" && <LandingPage onStartScan={handleStartScan} />}
       {screen === "scanning" && (
         <ScanningPage
@@ -99,7 +96,7 @@ export default function App() {
       )}
       {screen === "results" && (
         <ResultsPage
-          onRescan={handleRescan}
+          endpoints={endpoints}
           suggestions={suggestions}
           summary={summary}
         />

@@ -18,6 +18,7 @@ export interface SuggestionContext {
 
 // Host -> Webview messages
 export type HostMessage =
+  | { type: "triggerScan" }
   | { type: "scanProgress"; file: string; index: number; total: number; endpointsSoFar: number }
   | { type: "scanComplete" }
   | { type: "scanResults"; endpoints: EndpointRecord[]; suggestions: Suggestion[]; summary: ScanSummary }

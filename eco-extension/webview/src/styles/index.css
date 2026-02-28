@@ -1,8 +1,7 @@
 @import "tailwindcss";
+@import "@vscode/codicons/dist/codicon.css";
 
-* {
-  margin: 0;
-  padding: 0;
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -10,24 +9,319 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #0B0F0B;
-  font-family: 'JetBrains Mono', var(--vscode-editor-font-family, monospace);
+  background: var(--vscode-sideBar-background);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
+/* ─── Tab bar ─── */
+
+.eco-tabs {
+  display: flex;
+  flex-shrink: 0;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--vscode-tab-border);
 }
 
-::-webkit-scrollbar-track {
-  background: #0B0F0B;
+.eco-tab {
+  padding: 6px 16px;
+  font-family: var(--vscode-font-family);
+  font-size: 11px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--vscode-tab-inactiveForeground);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 150ms ease, background 150ms ease;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #1a2a1a;
+.eco-tab:hover {
+  color: var(--vscode-tab-activeForeground);
+  background: var(--vscode-tab-hoverBackground, var(--vscode-list-hoverBackground));
+}
+
+.eco-tab.active {
+  color: var(--vscode-tab-activeForeground);
+  background: var(--vscode-tab-activeBackground);
+  border-bottom-color: var(--vscode-tab-activeBorderTop, var(--vscode-focusBorder));
+}
+
+/* ─── Buttons ─── */
+
+.eco-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  transition: background 150ms ease;
+}
+
+.eco-btn-primary:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.eco-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--vscode-icon-foreground, var(--vscode-descriptionForeground));
+  padding: 4px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.eco-btn-icon:hover {
+  background: var(--vscode-toolbar-hoverBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-foreground);
+}
+
+.eco-btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--vscode-textLink-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  padding: 0;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.eco-btn-link:hover {
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: underline;
+}
+
+/* ─── Input ─── */
+
+.eco-input {
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 2px;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  outline: none;
+  padding: 6px 8px;
+  resize: none;
+  width: 100%;
+}
+
+.eco-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.eco-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+/* ─── Markdown ─── */
+
+.eco-md {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  line-height: 1.5;
+  color: var(--vscode-foreground);
+}
+
+.eco-md p {
+  margin-bottom: 8px;
+}
+
+.eco-md p:last-child {
+  margin-bottom: 0;
+}
+
+.eco-md code {
+  font-family: var(--vscode-editor-font-family);
+  font-size: calc(var(--vscode-editor-font-size, 13px) * 0.9);
+  background: var(--vscode-textCodeBlock-background);
+  padding: 1px 4px;
   border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #243224;
+.eco-md pre {
+  position: relative;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 4px;
+  padding: 12px;
+  padding-right: 40px;
+  overflow-x: auto;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.eco-md pre code {
+  background: none;
+  padding: 0;
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+}
+
+.eco-md a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+.eco-md a:hover {
+  text-decoration: underline;
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.eco-md blockquote {
+  border-left: 3px solid var(--vscode-textBlockQuote-border);
+  background: var(--vscode-textBlockQuote-background);
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.eco-md h1, .eco-md h2, .eco-md h3 {
+  color: var(--vscode-foreground);
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.eco-md h1 { font-size: 1.2em; }
+.eco-md h2 { font-size: 1.1em; }
+.eco-md h3 { font-size: 1em; }
+
+.eco-md ul, .eco-md ol {
+  padding-left: 20px;
+  margin-bottom: 8px;
+}
+
+.eco-md li {
+  margin-bottom: 2px;
+}
+
+.eco-md table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.eco-md th, .eco-md td {
+  border: 1px solid var(--vscode-panel-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.eco-md th {
+  background: var(--vscode-list-hoverBackground);
+  font-weight: 600;
+}
+
+/* Copy button inside code blocks */
+
+.eco-code-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--vscode-toolbar-hoverBackground, var(--vscode-list-hoverBackground));
+  border: none;
+  cursor: pointer;
+  color: var(--vscode-icon-foreground, var(--vscode-descriptionForeground));
+  padding: 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eco-md pre:hover .eco-code-copy {
+  opacity: 1;
+}
+
+/* ─── Suggestion cards ─── */
+
+.eco-suggestion {
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border));
+}
+
+.eco-suggestion-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  transition: background 150ms ease;
+}
+
+.eco-suggestion-header:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.eco-suggestion-body {
+  padding: 8px 12px 12px 26px;
+  border-top: 1px solid var(--vscode-panel-border, var(--vscode-widget-border));
+}
+
+/* ─── Endpoint row ─── */
+
+.eco-endpoint-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 11px;
+  transition: background 150ms ease;
+}
+
+.eco-endpoint-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+/* ─── Section header (collapsible) ─── */
+
+.eco-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border));
+  width: 100%;
+  text-align: left;
+  font-family: var(--vscode-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 150ms ease;
+}
+
+.eco-section-header:hover {
+  background: var(--vscode-list-hoverBackground);
 }

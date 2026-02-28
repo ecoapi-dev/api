@@ -1,30 +1,16 @@
 import { useState } from "react";
-import { RotateCcw, ExternalLink, Sparkles } from "lucide-react";
-import { LeafIcon, SmallLeafIcon } from "./LeafIcon";
+import { Markdown } from "./Markdown";
 import { ChatPage } from "./ChatPage";
-import type { Suggestion, ScanSummary, SuggestionContext } from "../types";
+import type { Suggestion, ScanSummary, SuggestionContext, EndpointRecord } from "../types";
 import { postMessage } from "../vscode";
 
 interface ResultsPageProps {
-  onRescan: () => void;
   suggestions: Suggestion[];
   summary: ScanSummary;
+  endpoints: EndpointRecord[];
 }
 
-type SeverityDisplay = "HIGH" | "MEDIUM" | "LOW";
-type Tab = "suggestions" | "chat";
-
-const severityMap: Record<string, SeverityDisplay> = {
-  high: "HIGH",
-  medium: "MEDIUM",
-  low: "LOW",
-};
-
-const severityColor: Record<SeverityDisplay, string> = {
-  HIGH: "#E85454",
-  MEDIUM: "#D4A843",
-  LOW: "#4EAA57",
-};
+type Tab = "findings" | "chat";
 
 const typeLabels: Record<string, string> = {
   n_plus_one: "n+1",
@@ -34,103 +20,350 @@ const typeLabels: Record<string, string> = {
   rate_limit: "rate-limit",
 };
 
-function SuggestionCard({
-  suggestion,
-  onAskAI,
-}: {
-  suggestion: Suggestion;
-  onAskAI: (s: Suggestion) => void;
-}) {
+function extractCode(raw: string): { code: string; language: string } {
+  const fenced = raw.match(/^```(\w*)\n([\s\S]*?)```\s*$/);
+  if (fenced) return { language: fenced[1], code: fenced[2].trim() };
+  return { language: "", code: raw.trim() };
+}
+
+function SeverityIcon({ severity }: { severity: string }) {
+  if (severity === "high") {
+    return (
+      <span
+        className="codicon codicon-error"
+        style={{ color: "var(--vscode-editorError-foreground)", fontSize: "14px", flexShrink: 0 }}
+      />
+    );
+  }
+  if (severity === "medium") {
+    return (
+      <span
+        className="codicon codicon-warning"
+        style={{ color: "var(--vscode-editorWarning-foreground)", fontSize: "14px", flexShrink: 0 }}
+      />
+    );
+  }
+  return (
+    <span
+      className="codicon codicon-info"
+      style={{ color: "var(--vscode-descriptionForeground)", fontSize: "14px", flexShrink: 0 }}
+    />
+  );
+}
+
+function TypeBadge({ type }: { type: string }) {
+  return (
+    <span
+      style={{
+        background: "var(--vscode-badge-background)",
+        color: "var(--vscode-badge-foreground)",
+        fontSize: "10px",
+        padding: "1px 5px",
+        borderRadius: "10px",
+        fontWeight: 600,
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {typeLabels[type] ?? type}
+    </span>
+  );
+}
+
+function CodeFix({ codeFix, file }: { codeFix: string; file?: string }) {
+  const [copied, setCopied] = useState(false);
+  const { code, language } = extractCode(codeFix);
+  if (!code) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div
-      className="group cursor-default px-3.5 py-3.5 rounded-md"
-      style={{ border: "1px solid #1a2a1a" }}
+      style={{
+        marginTop: "10px",
+        borderRadius: "4px",
+        overflow: "hidden",
+        border: "1px solid var(--vscode-panel-border)",
+      }}
     >
-      <div className="flex items-start gap-2">
-        <span
-          style={{
-            color: "#4EAA57",
-            fontSize: "0.65rem",
-            flexShrink: 0,
-            marginTop: "1px",
-          }}
-        >
-          {typeLabels[suggestion.type] || suggestion.type}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "4px 8px",
+          background: "var(--vscode-editorGroupHeader-tabsBackground)",
+          borderBottom: "1px solid var(--vscode-panel-border)",
+        }}
+      >
+        <span style={{ color: "var(--vscode-descriptionForeground)", fontSize: "11px" }}>
+          {language || "code"}
         </span>
-        <span style={{ color: "#9EBF9E", fontSize: "0.75rem", lineHeight: 1.5 }}>
-          {suggestion.description}
-        </span>
-      </div>
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex items-center gap-1 flex-wrap">
-          {suggestion.affectedFiles.map((f) => (
-            <span
-              key={f}
-              className="cursor-pointer hover:underline"
-              style={{ color: "#2D4A2D", fontSize: "0.6rem" }}
-              onClick={() => postMessage({ type: "openFile", file: f })}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          {file && (
+            <button
+              className="eco-btn-icon"
+              onClick={() => postMessage({ type: "applyFix", code, file })}
+              title="Apply fix"
+              style={{ fontSize: "11px", gap: "3px", display: "flex", alignItems: "center", color: "var(--vscode-textLink-foreground)" }}
             >
-              {f}
-            </span>
-          ))}
+              <span className="codicon codicon-arrow-right" style={{ fontSize: "11px" }} />
+              apply
+            </button>
+          )}
+          <button className="eco-btn-icon" onClick={handleCopy} title="Copy">
+            <span
+              className={`codicon ${copied ? "codicon-check" : "codicon-copy"}`}
+              style={{ fontSize: "12px" }}
+            />
+          </button>
         </div>
-        <button
-          onClick={() => onAskAI(suggestion)}
-          className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-          style={{
-            color: "#4EAA57",
-            fontSize: "0.6rem",
-            backgroundColor: "transparent",
-            border: "none",
-          }}
-        >
-          fix
-          <Sparkles size={10} />
-        </button>
       </div>
+      <pre
+        style={{
+          margin: 0,
+          padding: "12px",
+          background: "var(--vscode-textCodeBlock-background)",
+          fontFamily: "var(--vscode-editor-font-family)",
+          fontSize: "var(--vscode-editor-font-size)",
+          overflowX: "auto",
+          lineHeight: 1.5,
+          color: "var(--vscode-editor-foreground, var(--vscode-foreground))",
+        }}
+      >
+        {code}
+      </pre>
     </div>
   );
 }
 
-function SeveritySection({
-  severity,
-  suggestions,
+function SuggestionCard({
+  suggestion,
+  expanded,
+  onToggle,
   onAskAI,
 }: {
-  severity: SeverityDisplay;
+  suggestion: Suggestion;
+  expanded: boolean;
+  onToggle: () => void;
+  onAskAI: (s: Suggestion) => void;
+}) {
+  const firstLine = suggestion.description.split("\n")[0];
+  const descShort = firstLine.length > 90 ? firstLine.slice(0, 90) + "…" : firstLine;
+
+  return (
+    <div className="eco-suggestion">
+      <button className="eco-suggestion-header" onClick={onToggle}>
+        <span
+          className={`codicon ${expanded ? "codicon-chevron-down" : "codicon-chevron-right"}`}
+          style={{ fontSize: "12px", flexShrink: 0, marginTop: "1px", color: "var(--vscode-descriptionForeground)" }}
+        />
+        <SeverityIcon severity={suggestion.severity} />
+        <TypeBadge type={suggestion.type} />
+        <span style={{ flex: 1, lineHeight: 1.4, overflow: "hidden" }}>{descShort}</span>
+        {suggestion.estimatedMonthlySavings > 0 && (
+          <span
+            style={{
+              color: "var(--vscode-charts-green, #4caf50)",
+              fontSize: "11px",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            −${suggestion.estimatedMonthlySavings.toFixed(2)}/mo
+          </span>
+        )}
+      </button>
+
+      {expanded && (
+        <div className="eco-suggestion-body">
+          <Markdown content={suggestion.description} />
+
+          {suggestion.affectedFiles.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
+              {suggestion.affectedFiles.map((f) => (
+                <button
+                  key={f}
+                  className="eco-btn-link"
+                  style={{ fontSize: "11px" }}
+                  onClick={() => postMessage({ type: "openFile", file: f })}
+                >
+                  <span className="codicon codicon-file-code" style={{ fontSize: "11px" }} />
+                  {f}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {suggestion.codeFix && (
+            <CodeFix codeFix={suggestion.codeFix} file={suggestion.affectedFiles[0]} />
+          )}
+
+          <button
+            className="eco-btn-icon"
+            onClick={() => onAskAI(suggestion)}
+            style={{
+              marginTop: "10px",
+              gap: "4px",
+              display: "flex",
+              alignItems: "center",
+              color: "var(--vscode-textLink-foreground)",
+              fontSize: "11px",
+            }}
+          >
+            <span className="codicon codicon-comment" style={{ fontSize: "12px" }} />
+            Ask AI
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SeverityGroup({
+  label,
+  suggestions,
+  expanded,
+  onToggle,
+  onAskAI,
+}: {
+  label: string;
   suggestions: Suggestion[];
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
   onAskAI: (s: Suggestion) => void;
 }) {
   if (suggestions.length === 0) return null;
 
+  const color =
+    label === "HIGH"
+      ? "var(--vscode-editorError-foreground)"
+      : label === "MEDIUM"
+      ? "var(--vscode-editorWarning-foreground)"
+      : "var(--vscode-descriptionForeground)";
+
   return (
-    <div className="mb-5">
-      <div className="flex items-center gap-3">
-        <div className="flex-1" style={{ height: "1px", backgroundColor: "#1a2a1a" }} />
-        <span
-          style={{
-            color: severityColor[severity],
-            fontSize: "0.65rem",
-            fontWeight: 600,
-            letterSpacing: "0.1em",
-          }}
-        >
-          {severity}
-        </span>
-        <div className="flex-1" style={{ height: "1px", backgroundColor: "#1a2a1a" }} />
+    <div>
+      <div
+        style={{
+          padding: "4px 12px",
+          fontSize: "10px",
+          fontWeight: 600,
+          letterSpacing: "0.08em",
+          color,
+          borderBottom: "1px solid var(--vscode-panel-border)",
+        }}
+      >
+        {label}
       </div>
-      <div className="flex flex-col gap-3 mt-3">
-        {suggestions.map((s) => (
-          <SuggestionCard key={s.id} suggestion={s} onAskAI={onAskAI} />
-        ))}
-      </div>
+      {suggestions.map((s) => (
+        <SuggestionCard
+          key={s.id}
+          suggestion={s}
+          expanded={expanded.has(s.id)}
+          onToggle={() => onToggle(s.id)}
+          onAskAI={onAskAI}
+        />
+      ))}
     </div>
   );
 }
 
-export function ResultsPage({ onRescan, suggestions, summary }: ResultsPageProps) {
-  const [tab, setTab] = useState<Tab>("suggestions");
+function EndpointsList({ endpoints }: { endpoints: EndpointRecord[] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div style={{ borderTop: "1px solid var(--vscode-panel-border)" }}>
+      <button className="eco-section-header" onClick={() => setOpen((v) => !v)}>
+        <span
+          className={`codicon ${open ? "codicon-chevron-down" : "codicon-chevron-right"}`}
+          style={{ fontSize: "12px" }}
+        />
+        Endpoints ({endpoints.length})
+      </button>
+
+      {open &&
+        endpoints.map((ep) => (
+          <div key={ep.id} className="eco-endpoint-row">
+            <span
+              style={{
+                background: "var(--vscode-badge-background)",
+                color: "var(--vscode-badge-foreground)",
+                fontSize: "10px",
+                padding: "1px 4px",
+                borderRadius: "2px",
+                fontWeight: 700,
+                flexShrink: 0,
+                letterSpacing: "0.04em",
+              }}
+            >
+              {ep.method}
+            </span>
+            <span
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: "11px",
+              }}
+              title={ep.url}
+            >
+              {ep.url}
+            </span>
+            <span
+              style={{
+                background: "var(--vscode-editorGroupHeader-tabsBackground)",
+                color: "var(--vscode-descriptionForeground)",
+                fontSize: "10px",
+                padding: "1px 5px",
+                borderRadius: "10px",
+                flexShrink: 0,
+                border: "1px solid var(--vscode-panel-border)",
+              }}
+            >
+              {ep.provider}
+            </span>
+            <span style={{ color: "var(--vscode-descriptionForeground)", fontSize: "10px", flexShrink: 0 }}>
+              ${ep.monthlyCost.toFixed(2)}/mo
+            </span>
+            <span
+              style={{
+                fontSize: "10px",
+                flexShrink: 0,
+                color:
+                  ep.status === "redundant" || ep.status === "n_plus_one_risk"
+                    ? "var(--vscode-editorError-foreground)"
+                    : ep.status === "cacheable" || ep.status === "batchable" || ep.status === "rate_limit_risk"
+                    ? "var(--vscode-editorWarning-foreground)"
+                    : "var(--vscode-descriptionForeground)",
+              }}
+            >
+              {ep.status.replace(/_/g, " ")}
+            </span>
+          </div>
+        ))}
+    </div>
+  );
+}
+
+export function ResultsPage({ suggestions, summary, endpoints }: ResultsPageProps) {
+  const [tab, setTab] = useState<Tab>("findings");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [chatContext, setChatContext] = useState<SuggestionContext | null>(null);
+
+  const toggleCard = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleAskAI = (suggestion: Suggestion) => {
     setChatContext({
@@ -144,163 +377,83 @@ export function ResultsPage({ onRescan, suggestions, summary }: ResultsPageProps
     setTab("chat");
   };
 
-  const highSuggestions = suggestions.filter((s) => s.severity === "high");
-  const mediumSuggestions = suggestions.filter((s) => s.severity === "medium");
-  const lowSuggestions = suggestions.filter((s) => s.severity === "low");
+  const high = suggestions.filter((s) => s.severity === "high");
+  const medium = suggestions.filter((s) => s.severity === "medium");
+  const low = suggestions.filter((s) => s.severity === "low");
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-4 py-2 shrink-0"
-        style={{ borderBottom: "1px solid #1a2a1a" }}
-      >
-        <div className="flex items-center gap-2">
-          <LeafIcon size={18} />
-          <span
-            style={{
-              color: "#7EA87E",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-            }}
-          >
-            ECO
-          </span>
-        </div>
-
-        {/* Toggle */}
-        <div
-          className="flex items-center rounded-md overflow-hidden"
-          style={{ border: "1px solid #1a2a1a" }}
-        >
-          <button
-            onClick={() => setTab("suggestions")}
-            className="px-3 py-1 cursor-pointer transition-colors"
-            style={{
-              fontSize: "0.65rem",
-              color: tab === "suggestions" ? "#D6EDD0" : "#3A5A3A",
-              backgroundColor: tab === "suggestions" ? "#1a2a1a" : "transparent",
-              border: "none",
-            }}
-          >
-            Suggestions
-          </button>
-          <button
-            onClick={() => setTab("chat")}
-            className="px-3 py-1 cursor-pointer transition-colors"
-            style={{
-              fontSize: "0.65rem",
-              color: tab === "chat" ? "#D6EDD0" : "#3A5A3A",
-              backgroundColor: tab === "chat" ? "#1a2a1a" : "transparent",
-              border: "none",
-            }}
-          >
-            Chat
-          </button>
-        </div>
-
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Tab bar */}
+      <div className="eco-tabs">
         <button
-          onClick={onRescan}
-          className="flex items-center gap-1 cursor-pointer"
-          style={{
-            color: "#3A5A3A",
-            fontSize: "0.65rem",
-            backgroundColor: "transparent",
-            border: "none",
-          }}
+          className={`eco-tab${tab === "findings" ? " active" : ""}`}
+          onClick={() => setTab("findings")}
         >
-          <RotateCcw size={11} />
-          rescan
+          Findings
+        </button>
+        <button
+          className={`eco-tab${tab === "chat" ? " active" : ""}`}
+          onClick={() => setTab("chat")}
+        >
+          Chat
         </button>
       </div>
 
-      {tab === "suggestions" ? (
-        <>
-          {/* Summary */}
+      {tab === "findings" ? (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {/* Summary bar */}
           <div
-            className="px-4 py-3.5 shrink-0"
-            style={{ borderBottom: "1px solid #131A13" }}
+            style={{
+              padding: "5px 12px",
+              borderBottom: "1px solid var(--vscode-panel-border)",
+              flexShrink: 0,
+              color: "var(--vscode-descriptionForeground)",
+              fontSize: "11px",
+            }}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex-1" style={{ height: "1px", backgroundColor: "#1a2a1a" }} />
-              <span
-                style={{
-                  color: "#3A5A3A",
-                  fontSize: "0.7rem",
-                  fontWeight: 600,
-                  letterSpacing: "0.1em",
-                }}
-              >
-                SCAN RESULTS
-              </span>
-              <div className="flex-1" style={{ height: "1px", backgroundColor: "#1a2a1a" }} />
-            </div>
-            <div className="flex items-start gap-2.5 mt-2">
-              <div className="shrink-0 mt-0.5">
-                <SmallLeafIcon size={14} />
-              </div>
-              <div>
-                <p style={{ color: "#9EBF9E", fontSize: "0.75rem", lineHeight: 1.7 }}>
-                  Scanned{" "}
-                  <span style={{ color: "#D6EDD0" }}>
-                    {summary.totalEndpoints} endpoints
-                  </span>{" "}
-                  across your workspace. Found{" "}
-                  <span style={{ color: "#D6EDD0" }}>
-                    {suggestions.length} suggestions
-                  </span>{" "}
-                  with an estimated{" "}
-                  <span style={{ color: "#4EAA57" }}>
-                    ${summary.totalMonthlyCost.toFixed(2)}/mo
-                  </span>{" "}
-                  in total API costs.{" "}
-                  {summary.highRiskCount > 0 && (
-                    <>
-                      <span style={{ color: "#E85454" }}>
-                        {summary.highRiskCount} high-risk
-                      </span>{" "}
-                      issues need attention.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Suggestions list */}
-          <div className="flex-1 overflow-y-auto px-4 py-4">
-            {suggestions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <SmallLeafIcon size={32} />
-                <p
-                  className="mt-4 text-center"
-                  style={{ color: "#7EA87E", fontSize: "0.8rem" }}
-                >
-                  No issues found. Your API usage looks clean!
-                </p>
-              </div>
-            ) : (
+            {summary.totalEndpoints} endpoints
+            <span style={{ margin: "0 5px", opacity: 0.4 }}>·</span>
+            {suggestions.length} suggestions
+            <span style={{ margin: "0 5px", opacity: 0.4 }}>·</span>
+            ${summary.totalMonthlyCost.toFixed(2)}/mo
+            {summary.highRiskCount > 0 && (
               <>
-                <SeveritySection
-                  severity="HIGH"
-                  suggestions={highSuggestions}
-                  onAskAI={handleAskAI}
-                />
-                <SeveritySection
-                  severity="MEDIUM"
-                  suggestions={mediumSuggestions}
-                  onAskAI={handleAskAI}
-                />
-                <SeveritySection
-                  severity="LOW"
-                  suggestions={lowSuggestions}
-                  onAskAI={handleAskAI}
-                />
+                <span style={{ margin: "0 5px", opacity: 0.4 }}>·</span>
+                <span style={{ color: "var(--vscode-editorError-foreground)" }}>
+                  {summary.highRiskCount} high
+                </span>
               </>
             )}
           </div>
-        </>
+
+          {/* Content */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {suggestions.length === 0 ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px 16px",
+                  gap: "8px",
+                  color: "var(--vscode-descriptionForeground)",
+                }}
+              >
+                <span className="codicon codicon-check" style={{ fontSize: "24px" }} />
+                <span>No issues found</span>
+              </div>
+            ) : (
+              <>
+                <SeverityGroup label="HIGH" suggestions={high} expanded={expanded} onToggle={toggleCard} onAskAI={handleAskAI} />
+                <SeverityGroup label="MEDIUM" suggestions={medium} expanded={expanded} onToggle={toggleCard} onAskAI={handleAskAI} />
+                <SeverityGroup label="LOW" suggestions={low} expanded={expanded} onToggle={toggleCard} onAskAI={handleAskAI} />
+              </>
+            )}
+
+            {endpoints.length > 0 && <EndpointsList endpoints={endpoints} />}
+          </div>
+        </div>
       ) : (
         <ChatPage context={chatContext} />
       )}
