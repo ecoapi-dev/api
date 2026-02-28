@@ -13,6 +13,7 @@ import {
   getProjectWithSummary,
   getScan,
   getSuggestion,
+  getSustainabilityStats,
   listLatestEndpoints,
   listLatestSuggestions,
   listProjects,
@@ -192,6 +193,11 @@ app.get("/projects/:id/suggestions/:suggestionId", async (c) => {
 app.get("/projects/:id/graph", async (c) => {
   const graph = await getGraph(c.env.DB, c.req.param("id"), c.req.query("cluster_by"));
   return c.json({ data: graph });
+});
+
+app.get("/projects/:id/sustainability", async (c) => {
+  const stats = await getSustainabilityStats(c.env.DB, c.req.param("id"));
+  return c.json({ data: stats });
 });
 
 app.get("/projects/:id/cost", async (c) => {

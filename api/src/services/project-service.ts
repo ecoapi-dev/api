@@ -9,10 +9,20 @@ import {
   Scan,
   ScanSummary,
   Suggestion,
-  SuggestionType
+  SuggestionType,
+  SustainabilityProviderBreakdown,
+  SustainabilityStats
 } from "../models/types";
 import { notFound, AppError } from "../utils/app-error";
 import { analyzeApiCalls } from "./analysis-service";
+import {
+  AI_PROVIDERS,
+  CO2_GRAMS_PER_KWH,
+  DEFAULT_AI_ENERGY_KWH,
+  DEFAULT_REGULAR_ENERGY_KWH,
+  ENERGY_PER_CALL_KWH,
+  WATER_LITERS_PER_KWH
+} from "../config/sustainability";
 
 // ---------------------------------------------------------------------------
 // Raw DB row types (snake_case columns, JSON strings for arrays/objects)
@@ -493,6 +503,69 @@ export const getCostBreakdownByProvider = async (
     callsPerDay: Number(value.callsPerDay.toFixed(2)),
     endpointCount: value.endpointCount
   }));
+};
+
+export const getSustainabilityStats = async (
+  db: D1Database,
+  projectId: string
+): Promise<SustainabilityStats> => {
+  const endpoints = await listLatestEndpoints(db, projectId);
+
+  const providerMap = new Map<string, { callsPerDay: number }>();
+  for (const ep of endpoints) {
+    const current = providerMap.get(ep.provider) ?? { callsPerDay: 0 };
+    current.callsPerDay += ep.callsPerDay;
+    providerMap.set(ep.provider, current);
+  }
+
+  let totalDailyKwh = 0;
+  let totalAiCallsPerDay = 0;
+  let totalCallsPerDay = 0;
+  const byProvider: SustainabilityProviderBreakdown[] = [];
+
+  for (const [provider, data] of providerMap.entries()) {
+    const isAi = AI_PROVIDERS.has(provider);
+    const energyPerCall =
+      ENERGY_PER_CALL_KWH[provider] ?? (isAi ? DEFAULT_AI_ENERGY_KWH : DEFAULT_REGULAR_ENERGY_KWH);
+    const dailyKwh = data.callsPerDay * energyPerCall;
+
+    totalDailyKwh += dailyKwh;
+    totalCallsPerDay += data.callsPerDay;
+    if (isAi) totalAiCallsPerDay += data.callsPerDay;
+
+    byProvider.push({
+      provider,
+      isAi,
+      callsPerDay: Number(data.callsPerDay.toFixed(2)),
+      dailyKwh: Number(dailyKwh.toFixed(6)),
+      dailyWaterLiters: Number((dailyKwh * WATER_LITERS_PER_KWH).toFixed(6)),
+      dailyCo2Grams: Number((dailyKwh * CO2_GRAMS_PER_KWH).toFixed(4))
+    });
+  }
+
+  byProvider.sort((a, b) => b.dailyKwh - a.dailyKwh);
+
+  return {
+    electricity: {
+      dailyKwh: Number(totalDailyKwh.toFixed(6)),
+      monthlyKwh: Number((totalDailyKwh * 30).toFixed(4))
+    },
+    water: {
+      dailyLiters: Number((totalDailyKwh * WATER_LITERS_PER_KWH).toFixed(6)),
+      monthlyLiters: Number((totalDailyKwh * WATER_LITERS_PER_KWH * 30).toFixed(4))
+    },
+    co2: {
+      dailyGrams: Number((totalDailyKwh * CO2_GRAMS_PER_KWH).toFixed(4)),
+      monthlyGrams: Number((totalDailyKwh * CO2_GRAMS_PER_KWH * 30).toFixed(2))
+    },
+    aiCallsPerDay: Number(totalAiCallsPerDay.toFixed(2)),
+    totalCallsPerDay: Number(totalCallsPerDay.toFixed(2)),
+    aiCallsPercentage:
+      totalCallsPerDay > 0
+        ? Number(((totalAiCallsPerDay / totalCallsPerDay) * 100).toFixed(1))
+        : 0,
+    byProvider
+  };
 };
 
 export const getCostBreakdownByFile = async (

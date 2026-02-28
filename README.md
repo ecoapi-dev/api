@@ -14,6 +14,7 @@ EcoAPI turns parsed API call data into actionable diagnostics:
 - Endpoint-level risk/status
 - Optimization suggestions with estimated savings
 - Graph data for dependency visualization
+- **Sustainability stats** — electricity (kWh), water (L), and CO2 (g) footprint estimated from API call volume, with AI vs non-AI breakdown
 
 ## Tech Stack
 
@@ -43,6 +44,7 @@ api/                        # Cloudflare Workers API
     env.ts                  # Shared Env/Variables/AppContext types
     config/
       pricing.ts            # Provider pricing & keyword detection
+      sustainability.ts     # Energy/water/CO2 constants per provider
     middleware/
       cors.ts
       content-type.ts
@@ -312,6 +314,51 @@ GET    /projects/:id/cost/by-provider?page=1&limit=20
 GET    /projects/:id/cost/by-file?page=1&limit=20
 ```
 
+### Sustainability
+
+```
+GET    /projects/:id/sustainability
+```
+
+Returns estimated environmental impact computed from the project's latest scan:
+
+```json
+{
+  "data": {
+    "electricity": { "dailyKwh": 4.5, "monthlyKwh": 135.0 },
+    "water":       { "dailyLiters": 8.1, "monthlyLiters": 243.0 },
+    "co2":         { "dailyGrams": 1737.0, "monthlyGrams": 52110.0 },
+    "aiCallsPerDay": 1500,
+    "totalCallsPerDay": 1501,
+    "aiCallsPercentage": 99.9,
+    "byProvider": [
+      {
+        "provider": "openai",
+        "isAi": true,
+        "callsPerDay": 1500,
+        "dailyKwh": 4.5,
+        "dailyWaterLiters": 8.1,
+        "dailyCo2Grams": 1737.0
+      }
+    ]
+  }
+}
+```
+
+**Energy constants** (defined in `api/src/config/sustainability.ts`):
+
+| Provider | kWh per call | AI? |
+|----------|-------------|-----|
+| OpenAI | 0.003 | Yes |
+| Google Maps | 0.00003 | No |
+| Stripe | 0.00002 | No |
+| Twilio | 0.00001 | No |
+| AWS S3 | 0.000008 | No |
+| SendGrid / Internal | 0.000005 | No |
+
+Water intensity: **1.8 L/kWh** (Microsoft Azure data center disclosures)
+CO2 intensity: **386 g/kWh** (US EPA eGRID 2022 national average)
+
 ### Providers
 
 ```
@@ -370,4 +417,7 @@ curl -s https://your-worker.workers.dev/projects/{projectId}/suggestions
 
 # 5. View cost breakdown
 curl -s https://your-worker.workers.dev/projects/{projectId}/cost/by-provider
+
+# 6. View sustainability stats
+curl -s https://your-worker.workers.dev/projects/{projectId}/sustainability
 ```
