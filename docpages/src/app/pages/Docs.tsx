@@ -617,7 +617,7 @@ export default function Docs() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                   {[
                     { label: 'Local dev',     value: 'http://localhost:8787' },
-                    { label: 'Production',    value: 'https://your-worker.workers.dev' },
+                    { label: 'Production',    value: 'https://api.ecoapi.dev' },
                     { label: 'Content-Type',  value: 'application/json (required)' },
                     { label: 'Start dev',     value: 'cd api && npm run dev' },
                   ].map(({ label, value }) => (
@@ -657,7 +657,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   "status": "ok",
   "timestamp": "2025-01-15T12:00:00.000Z"
 }`}
-                curl={`curl https://your-worker.workers.dev/health`}
+                curl={`curl https://api.ecoapi.dev/health`}
                 delay={0.09}
               />
 
@@ -688,7 +688,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     "latest_scan_id": null
   }
 }`}
-                curl={`curl -X POST https://your-worker.workers.dev/projects \\
+                curl={`curl -X POST https://api.ecoapi.dev/projects \\
   -H "Content-Type: application/json" \\
   -d '{"name":"my-app"}'`}
                 delay={0.11}
@@ -714,7 +714,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     "totalPages": 1, "hasNext": false, "hasPrev": false
   }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects?page=1&limit=20&sort=created_at&order=desc"`}
+                curl={`curl "https://api.ecoapi.dev/projects?page=1&limit=20&sort=created_at&order=desc"`}
                 delay={0.12}
               />
 
@@ -734,7 +734,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     "latest_scan_id": "s9f8e7d6-..."
   }
 }`}
-                curl={`curl https://your-worker.workers.dev/projects/a1b2c3d4-...`}
+                curl={`curl https://api.ecoapi.dev/projects/a1b2c3d4-...`}
                 delay={0.13}
               />
 
@@ -750,7 +750,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
                 requestExample={`{ "name": "my-app-v2" }`}
                 responseStatuses={[{ code: '200', label: 'OK' }, { code: '404', label: 'Not Found' }]}
                 responseExample={`{ "data": { "id": "...", "name": "my-app-v2", ... } }`}
-                curl={`curl -X PATCH https://your-worker.workers.dev/projects/a1b2c3d4-... \\
+                curl={`curl -X PATCH https://api.ecoapi.dev/projects/a1b2c3d4-... \\
   -H "Content-Type: application/json" \\
   -d '{"name":"my-app-v2"}'`}
                 delay={0.14}
@@ -762,7 +762,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
                 path="/projects/:id"
                 description="Delete a project and all its associated data (scans, endpoints, suggestions) in a cascading batch operation. Returns 204 No Content on success."
                 responseStatuses={[{ code: '204', label: 'No Content' }, { code: '404', label: 'Not Found' }]}
-                curl={`curl -X DELETE https://your-worker.workers.dev/projects/a1b2c3d4-...`}
+                curl={`curl -X DELETE https://api.ecoapi.dev/projects/a1b2c3d4-...`}
                 delay={0.15}
               />
 
@@ -815,7 +815,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     }
   }
 }`}
-                curl={`curl -X POST https://your-worker.workers.dev/projects/{projectId}/scans \\
+                curl={`curl -X POST https://api.ecoapi.dev/projects/{projectId}/scans \\
   -H "Content-Type: application/json" \\
   -d '{
     "apiCalls": [{
@@ -846,7 +846,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   "data": [{ "id": "s9f8e7d6-...", "created_at": "...", "summary": { ... } }],
   "pagination": { "page": 1, "limit": 20, "total": 5, ... }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects/{projectId}/scans?sort=created_at&order=desc"`}
+                curl={`curl "https://api.ecoapi.dev/projects/{projectId}/scans?sort=created_at&order=desc"`}
                 delay={0.18}
               />
 
@@ -869,7 +869,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     }
   }
 }`}
-                curl={`curl https://your-worker.workers.dev/projects/{projectId}/scans/latest`}
+                curl={`curl https://api.ecoapi.dev/projects/{projectId}/scans/latest`}
                 delay={0.19}
               />
 
@@ -880,7 +880,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
                 description="Retrieve a specific scan by its ID, including its summary statistics."
                 responseStatuses={[{ code: '200', label: 'OK' }, { code: '404', label: 'Not Found' }]}
                 responseExample={`{ "data": { "id": "s9f8e7d6-...", "summary": { ... }, ... } }`}
-                curl={`curl https://your-worker.workers.dev/projects/{projectId}/scans/{scanId}`}
+                curl={`curl https://api.ecoapi.dev/projects/{projectId}/scans/{scanId}`}
                 delay={0.2}
               />
 
@@ -920,7 +920,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   ],
   "pagination": { ... }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects/{projectId}/endpoints?provider=stripe&status=n%2B1&sort=monthly_cost&order=desc"`}
+                curl={`curl "https://api.ecoapi.dev/projects/{projectId}/endpoints?provider=stripe&status=n%2B1&sort=monthly_cost&order=desc"`}
                 delay={0.22}
               />
 
@@ -946,7 +946,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     "status": "n+1"
   }
 }`}
-                curl={`curl https://your-worker.workers.dev/projects/{projectId}/endpoints/{endpointId}`}
+                curl={`curl https://api.ecoapi.dev/projects/{projectId}/endpoints/{endpointId}`}
                 delay={0.23}
               />
 
@@ -982,7 +982,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   ],
   "pagination": { ... }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects/{projectId}/suggestions?severity=high&sort=estimated_monthly_savings&order=desc"`}
+                curl={`curl "https://api.ecoapi.dev/projects/{projectId}/suggestions?severity=high&sort=estimated_monthly_savings&order=desc"`}
                 delay={0.25}
               />
 
@@ -993,7 +993,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
                 description="Retrieve a single suggestion including the full code_fix snippet and affected endpoints."
                 responseStatuses={[{ code: '200', label: 'OK' }, { code: '404', label: 'Not Found' }]}
                 responseExample={`{ "data": { "id": "sg1a2b3c-...", "type": "cache", "severity": "high", ... } }`}
-                curl={`curl https://your-worker.workers.dev/projects/{projectId}/suggestions/{suggestionId}`}
+                curl={`curl https://api.ecoapi.dev/projects/{projectId}/suggestions/{suggestionId}`}
                 delay={0.26}
               />
 
@@ -1020,7 +1020,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     ]
   }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects/{projectId}/graph?cluster_by=provider"`}
+                curl={`curl "https://api.ecoapi.dev/projects/{projectId}/graph?cluster_by=provider"`}
                 delay={0.28}
               />
 
@@ -1044,7 +1044,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     ]
   }
 }`}
-                curl={`curl https://your-worker.workers.dev/projects/{projectId}/cost`}
+                curl={`curl https://api.ecoapi.dev/projects/{projectId}/cost`}
                 delay={0.3}
               />
 
@@ -1065,7 +1065,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   ],
   "pagination": { ... }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects/{projectId}/cost/by-provider?page=1&limit=20"`}
+                curl={`curl "https://api.ecoapi.dev/projects/{projectId}/cost/by-provider?page=1&limit=20"`}
                 delay={0.31}
               />
 
@@ -1086,7 +1086,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   ],
   "pagination": { ... }
 }`}
-                curl={`curl "https://your-worker.workers.dev/projects/{projectId}/cost/by-file?page=1&limit=20"`}
+                curl={`curl "https://api.ecoapi.dev/projects/{projectId}/cost/by-file?page=1&limit=20"`}
                 delay={0.32}
               />
 
@@ -1127,7 +1127,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     ]
   }
 }`}
-                curl={`curl https://your-worker.workers.dev/projects/{projectId}/sustainability`}
+                curl={`curl https://api.ecoapi.dev/projects/{projectId}/sustainability`}
                 delay={0.34}
               />
 
@@ -1173,7 +1173,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
   ],
   "pagination": { ... }
 }`}
-                curl={`curl https://your-worker.workers.dev/providers`}
+                curl={`curl https://api.ecoapi.dev/providers`}
                 delay={0.37}
               />
 
@@ -1192,7 +1192,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     "isAi": false
   }
 }`}
-                curl={`curl https://your-worker.workers.dev/providers/stripe`}
+                curl={`curl https://api.ecoapi.dev/providers/stripe`}
                 delay={0.38}
               />
 
@@ -1219,7 +1219,7 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
     "reply": "The Stripe GET /v1/customers endpoint is called once per user request inside a loop, resulting in N API calls instead of one batched lookup. Cache results per session or use the Stripe customer list endpoint to fix this."
   }
 }`}
-                curl={`curl -X POST https://your-worker.workers.dev/chat \\
+                curl={`curl -X POST https://api.ecoapi.dev/chat \\
   -H "Content-Type: application/json" \\
   -d '{"message":"Why is the Stripe endpoint flagged as N+1?","projectId":"a1b2c3d4-..."}'`}
                 delay={0.4}
@@ -1341,13 +1341,13 @@ npm run dev                             # → http://localhost:8787`}</CodeBlock
                   the <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px' }}>id</code> returned by step 1.
                 </p>
                 <CodeBlock>{`# 1. Create project
-curl -s -X POST https://your-worker.workers.dev/projects \\
+curl -s -X POST https://api.ecoapi.dev/projects \\
   -H "Content-Type: application/json" \\
   -d '{"name":"my-app"}'
 # → { "data": { "id": "a1b2c3d4-...", ... } }
 
 # 2. Trigger scan
-curl -s -X POST https://your-worker.workers.dev/projects/{projectId}/scans \\
+curl -s -X POST https://api.ecoapi.dev/projects/{projectId}/scans \\
   -H "Content-Type: application/json" \\
   -d '{
     "apiCalls": [{
@@ -1361,16 +1361,16 @@ curl -s -X POST https://your-worker.workers.dev/projects/{projectId}/scans \\
   }'
 
 # 3. View detected endpoints
-curl -s https://your-worker.workers.dev/projects/{projectId}/endpoints
+curl -s https://api.ecoapi.dev/projects/{projectId}/endpoints
 
 # 4. View optimization suggestions
-curl -s https://your-worker.workers.dev/projects/{projectId}/suggestions
+curl -s https://api.ecoapi.dev/projects/{projectId}/suggestions
 
 # 5. View cost breakdown by provider
-curl -s https://your-worker.workers.dev/projects/{projectId}/cost/by-provider
+curl -s https://api.ecoapi.dev/projects/{projectId}/cost/by-provider
 
 # 6. View sustainability stats
-curl -s https://your-worker.workers.dev/projects/{projectId}/sustainability`}</CodeBlock>
+curl -s https://api.ecoapi.dev/projects/{projectId}/sustainability`}</CodeBlock>
               </SectionCard>
 
               {/* ── 17. Pricing Table ───────────────────────────────── */}
