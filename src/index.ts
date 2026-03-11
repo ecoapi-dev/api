@@ -10,6 +10,7 @@ import healthRoutes from "./routes/health";
 import projectRoutes from "./routes/projects";
 import providerRoutes from "./routes/providers";
 import chatRoutes from "./routes/chat";
+import telemetryRoutes from "./routes/telemetry";
 
 const app = new Hono<AppContext>();
 
@@ -33,6 +34,7 @@ app.route("/", healthRoutes);
 app.route("/", projectRoutes);
 app.route("/", providerRoutes);
 app.route("/", chatRoutes);
+app.route("/", telemetryRoutes);
 
 app.notFound(notFoundHandler);
 app.onError(errorHandler);

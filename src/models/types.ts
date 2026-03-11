@@ -174,3 +174,68 @@ export interface SingleResponse<T> {
   data: T;
 }
 
+// ---------------------------------------------------------------------------
+// Telemetry
+// ---------------------------------------------------------------------------
+
+export interface TelemetryMetricInput {
+  provider: string;
+  endpoint: string;
+  method: string;
+  requestCount: number;
+  errorCount: number;
+  totalLatencyMs: number;
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+  totalRequestBytes: number;
+  totalResponseBytes: number;
+  estimatedCostCents: number;
+}
+
+export interface TelemetryWindowInput {
+  environment: string;
+  sdkLanguage: string;
+  sdkVersion: string;
+  windowStart: string;
+  windowEnd: string;
+  metrics: TelemetryMetricInput[];
+}
+
+export interface AnalyticsDataRow {
+  date?: string;
+  windowStart?: string;
+  windowEnd?: string;
+  provider: string;
+  endpoint: string;
+  method: string;
+  requestCount: number;
+  errorCount: number;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+  totalRequestBytes: number;
+  totalResponseBytes: number;
+  totalCostCents: number;
+}
+
+export interface AnalyticsTopProvider {
+  provider: string;
+  requestCount: number;
+  costCents: number;
+}
+
+export interface AnalyticsSummary {
+  totalRequests: number;
+  totalErrors: number;
+  totalCostCents: number;
+  topProviders: AnalyticsTopProvider[];
+}
+
+export interface AnalyticsResponse {
+  projectId: string;
+  from: string;
+  to: string;
+  interval: "day" | "window";
+  data: AnalyticsDataRow[];
+  summary: AnalyticsSummary;
+}
+
