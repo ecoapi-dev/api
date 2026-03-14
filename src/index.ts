@@ -11,6 +11,8 @@ import projectRoutes from "./routes/projects";
 import providerRoutes from "./routes/providers";
 import chatRoutes from "./routes/chat";
 import telemetryRoutes from "./routes/telemetry";
+import { runRollup } from "./services/rollup-service";
+import type { Env } from "./env";
 
 const app = new Hono<AppContext>();
 
@@ -39,4 +41,20 @@ app.route("/", telemetryRoutes);
 app.notFound(notFoundHandler);
 app.onError(errorHandler);
 
-export default app;
+const handleScheduled = async (_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> => {
+  try {
+    const summary = await runRollup(env.DB);
+    console.log(
+      `[cron] rollup complete — ${summary.projects} project(s), ` +
+      `${summary.daysRolledUp} day-groups upserted, ` +
+      `${summary.windowsPruned} old metric rows pruned`
+    );
+  } catch (err) {
+    console.error("[cron] rollup failed:", err);
+  }
+};
+
+export default {
+  fetch: app.fetch,
+  scheduled: handleScheduled,
+};
