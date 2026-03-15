@@ -19,3 +19,18 @@ preview_id = "6ac6516a2da6479f9f21958a9ad25f82"
 
 [triggers]
 crons = ["0 * * * *"]
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
