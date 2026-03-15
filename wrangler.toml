@@ -17,9 +17,6 @@ binding = "KV"
 id = "bae737e6b52a4b22aeda239462033d1c"
 preview_id = "6ac6516a2da6479f9f21958a9ad25f82"
 
-[vars]
-ADMIN_API_KEY = "dev-admin-key"
-
 [triggers]
 crons = ["0 * * * *"]
 
